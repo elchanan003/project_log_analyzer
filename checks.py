@@ -18,3 +18,12 @@ def filter_sensitive_ports(path):
     :return list:
     """
     return [ip_address for ip_address in get_log(path) if ip_address[3] in ('22', '23', '3389')]
+
+def filter_large_sizes(path):
+    """
+     הפונקציה מקבלת את הנתונים ומחזירה רשימה
+     של כל השורות עם חבילות מעל 5000 בייט
+    :param path:
+    :return list:
+    """
+    return [ip_address for ip_address in get_log(path) if float(ip_address[-1]) > 5000]
