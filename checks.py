@@ -27,3 +27,13 @@ def filter_large_sizes(path):
     :return list:
     """
     return [ip_address for ip_address in get_log(path) if float(ip_address[-1]) > 5000]
+
+def add_label_sizes(path):
+    """
+    הפונקציה מקבלת את הנתונים
+    ומחזירה רשימה שבה כל שורה מתויגת
+    כ'גדול' או 'נורמלי' לפי חריגה מ 5000 בייטים
+    :param path:
+    :return list:
+    """
+    return [item + ["LARGE"] if float(item[-1]) > 5000 else item + ["NORMAL"] for item in get_log(path)]
