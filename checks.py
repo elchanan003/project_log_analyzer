@@ -42,5 +42,3 @@ def add_label_sizes(path):
 
 def count_source_ips(path):
     return {ip_source:count for ip_source, count in Counter(ip_address[1] for ip_address in get_log(path)).items()}
-
-print(count_source_ips(log_path))
