@@ -41,4 +41,10 @@ def add_label_sizes(path):
 
 
 def count_source_ips(path):
+    """
+    כתבו פונקציה שמקבלת את הנתונים ומחזירה מילון:
+    כתובת IP מקור → מספר הפניות שלה
+    :param path:
+    :return dict:
+    """
     return {ip_source:count for ip_source, count in Counter(ip_address[1] for ip_address in get_log(path)).items()}
