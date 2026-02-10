@@ -1,4 +1,5 @@
-from reader import get_log
+from reader import get_log, log_path
+from collections import Counter
 
 def filter_external_ips(path):
     """
@@ -37,3 +38,9 @@ def add_label_sizes(path):
     :return list:
     """
     return [item + ["LARGE"] if float(item[-1]) > 5000 else item + ["NORMAL"] for item in get_log(path)]
+
+
+def count_source_ips(path):
+    return {ip_source:count for ip_source, count in Counter(ip_address[1] for ip_address in get_log(path)).items()}
+
+print(count_source_ips(log_path))
