@@ -9,3 +9,12 @@ def filter_external_ips(path):
     :return list:
     """
     return [ip_address[1] for ip_address in get_log(path) if ip_address[1][:2] != '10' and ip_address[1][:7] != '192.168']
+
+def filter_sensitive_ports(path):
+    """
+    הפונקציה מקבלת את הנתונים
+    ומחזירה רשימה של כל השורות עם פורט רגיש
+    :param path:
+    :return list:
+    """
+    return [ip_address for ip_address in get_log(path) if ip_address[3] in ('22', '23', '3389')]
