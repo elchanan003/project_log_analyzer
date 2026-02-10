@@ -48,3 +48,12 @@ def count_source_ips(path):
     :return dict:
     """
     return {ip_source:count for ip_source, count in Counter(ip_address[1] for ip_address in get_log(path)).items()}
+
+def get_port_protocol_dict(path):
+    """
+    הפונקציה מקבלת את הנתונים ומחזירה מילון:
+    מספר פורט - שם הפרוטוקול
+    :param path:
+    :return dict:
+    """
+    return {ip_address[3]:ip_address[4] for ip_address in get_log(path)}
