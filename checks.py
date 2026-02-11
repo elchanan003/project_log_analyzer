@@ -83,9 +83,9 @@ def get_ip_labels(path):
 def filter_suspicious_ips(path):
     """
     הפונקציה מקבלת את מילון החשדות ומחזירה מילון חדש
-     רק עם כתובות שיש להן לפחות 2 חשדות
+    רק עם כתובות שיש להן לפחות 2 חשדות
     :param path:
-    :return:
+    :return dict:
     """
     ip_labels = get_ip_labels(path)
     return {ip:labels for ip, labels in ip_labels.items() if len(labels) >= 2}
