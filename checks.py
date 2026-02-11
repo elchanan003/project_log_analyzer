@@ -79,3 +79,13 @@ def get_ip_labels(path):
 
     return {ip[1]:[label for (label, group) in criteria_labels if ip[1] in group]
             for ip in get_log(path)}
+
+def filter_suspicious_ips(path):
+    """
+    הפונקציה מקבלת את מילון החשדות ומחזירה מילון חדש
+     רק עם כתובות שיש להן לפחות 2 חשדות
+    :param path:
+    :return:
+    """
+    ip_labels = get_ip_labels(path)
+    return {ip:labels for ip, labels in ip_labels.items() if len(labels) >= 2}
