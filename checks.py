@@ -1,4 +1,4 @@
-from reader import get_log
+from reader import get_log, log_path
 from collections import Counter
 
 def filter_external_ips(path):
@@ -39,7 +39,6 @@ def add_label_sizes(path):
     """
     return [item + ["LARGE"] if float(item[-1]) > 5000 else item + ["NORMAL"] for item in get_log(path)]
 
-
 def count_source_ips(path):
     """
     כתבו פונקציה שמקבלת את הנתונים ומחזירה מילון:
@@ -58,3 +57,11 @@ def get_port_protocol_dict(path):
     """
     return {ip_address[3]:ip_address[4] for ip_address in get_log(path)}
 
+def filter_by_hour(timestamps):
+    """
+    פונקציה שמקבלת שעה ותאריך של שליחת הלוגים
+    ומחזירה רשימה של השעות בלבד, מכל השורות
+    :param timestamps:
+    :return list:
+    """
+    return list(map(lambda data_time: int(data_time[11:13]) ,timestamps))
