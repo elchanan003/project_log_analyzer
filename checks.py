@@ -77,8 +77,17 @@ def convert_bytes_to_kb(path):
 def filter_sensitive_ports_v2(path):
     """
     סינון שורות עם פורט רגיש
-    ע״י שימוש בפונקציית פילטר
+    ע״י שימוש בפונקצית פילטר
     :param path:
     :return:
     """
-    return filter(lambda row: row[4] in ('22', '23', '3389'), get_log(path))
+    return list(filter(lambda row: row[4] in ('22', '23', '3389'), get_log(path)))
+
+def night_activity_by_filter(path):
+    """
+    סינון לוגים עם פעילות לילה
+    באמצעות שימוש בפונקצית פילטר
+    :param path:
+    :return:
+    """
+    return list(filter(lambda row: 6 > int(row[0][11:13]) >= 0, get_log(path)))
