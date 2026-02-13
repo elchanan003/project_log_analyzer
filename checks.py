@@ -73,3 +73,12 @@ def convert_bytes_to_kb(path):
     :return:
     """
     return list(map(lambda row: round(int(row[5]) / 1024, 2), get_log(path)))
+
+def filter_sensitive_ports_v2(path):
+    """
+    סינון שורות עם פורט רגיש
+    ע״י שימוש בפונקציית פילטר
+    :param path:
+    :return:
+    """
+    return filter(lambda row: row[4] in ('22', '23', '3389'), get_log(path))
