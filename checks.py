@@ -57,11 +57,11 @@ def get_port_protocol_dict(path):
     """
     return {ip_address[3]:ip_address[4] for ip_address in get_log(path)}
 
-def filter_by_hour(timestamps):
+def get_hours(path):
     """
-    פונקציה שמקבלת שעה ותאריך של שליחת הלוגים
-    ומחזירה רשימה של השעות בלבד, מכל השורות
-    :param timestamps:
+    פונקציה שמקבלת את הנתונים,
+    ומחזירה רשימה של השעות בלבד מכל השורות
+    :param path:
     :return list:
     """
-    return list(map(lambda data_time: int(data_time[11:13]) ,timestamps))
+    return list(map(lambda data_time: int(data_time[0][11:13]) ,get_log(path)))
