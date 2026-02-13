@@ -65,3 +65,11 @@ def get_hours(path):
     :return list:
     """
     return list(map(lambda data_time: int(data_time[0][11:13]) ,get_log(path)))
+
+def convert_bytes_to_kb(path):
+    """
+    ממירה גודל קבצים מבייטים לקילו בייטים
+    :param path:
+    :return:
+    """
+    return list(map(lambda row: round(int(row[5]) / 1024, 2), get_log(path)))
