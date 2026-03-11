@@ -1,93 +1,149 @@
-from reader import get_log, log_path
 from collections import Counter
+from config import SENSITIVE_PORTS, LARGE_PACKET_THRESHOLD, NIGHT_START_HOUR, NIGHT_END_HOUR
 
-def filter_external_ips(path):
+
+def filter_external_ips(logs):
     """
     הפונקציה מקבלת את הנתונים
     ומחזירה רשימה של כתובות IP מקור
     חיצוניות בלבד
-    :param path:
+    :param logs:
     :return list:
     """
-    return [ip_address[1] for ip_address in get_log(path) if ip_address[1][:2] != '10' and ip_address[1][:7] != '192.168']
+    return [
+        row[1]
+        for row in logs
+        if not row[1].startswith("192.168") and not row[1].startswith("10.")
+    ]
 
-def filter_sensitive_ports(path):
+
+def filter_sensitive_ports(logs):
     """
     הפונקציה מקבלת את הנתונים
     ומחזירה רשימה של כל השורות עם פורט רגיש
-    :param path:
+    :param logs:
     :return list:
     """
-    return [ip_address for ip_address in get_log(path) if ip_address[3] in ('22', '23', '3389')]
+    return list(filter(lambda row: row[3] in SENSITIVE_PORTS, logs))
 
-def filter_large_sizes(path):
+
+def filter_large_sizes(logs):
     """
-     הפונקציה מקבלת את הנתונים ומחזירה רשימה
-     של כל השורות עם חבילות מעל 5000 בייט
-    :param path:
+    הפונקציה מקבלת את הנתונים ומחזירה רשימה
+    של כל השורות עם חבילות מעל 5000 בייט
+    :param logs:
     :return list:
     """
-    return [ip_address for ip_address in get_log(path) if float(ip_address[-1]) > 5000]
+    return [row for row in logs if float(row[5]) > LARGE_PACKET_THRESHOLD]
 
-def add_label_sizes(path):
+
+def add_label_sizes(logs):
     """
     הפונקציה מקבלת את הנתונים
     ומחזירה רשימה שבה כל שורה מתויגת
     כ'גדול' או 'נורמלי' לפי חריגה מ 5000 בייטים
-    :param path:
+    :param logs:
     :return list:
     """
-    return [item + ["LARGE"] if float(item[-1]) > 5000 else item + ["NORMAL"] for item in get_log(path)]
+    return [
+        row + ["LARGE"] if float(row[5]) > LARGE_PACKET_THRESHOLD else row + ["NORMAL"]
+        for row in logs
+    ]
 
-def count_source_ips(path):
+
+def count_source_ips(logs):
     """
     כתבו פונקציה שמקבלת את הנתונים ומחזירה מילון:
     כתובת IP מקור → מספר הפניות שלה
-    :param path:
+    :param logs:
     :return dict:
     """
-    return {ip_source:count for ip_source, count in Counter(ip_address[1] for ip_address in get_log(path)).items()}
+    return {
+        source_ip: count
+        for source_ip, count in Counter(row[1] for row in logs).items()
+    }
 
-def get_port_protocol_dict(path):
+
+def get_port_protocol_dict(logs):
     """
     הפונקציה מקבלת את הנתונים ומחזירה מילון:
     מספר פורט - שם הפרוטוקול
-    :param path:
+    :param logs:
     :return dict:
     """
-    return {ip_address[3]:ip_address[4] for ip_address in get_log(path)}
+    return {row[3]: row[4] for row in logs}
 
-def get_hours(path):
+
+def get_hours(logs):
     """
     פונקציה שמקבלת את הנתונים,
     ומחזירה רשימה של השעות בלבד מכל השורות
-    :param path:
+    :param logs:
     :return list:
     """
-    return list(map(lambda data_time: int(data_time[0][11:13]) ,get_log(path)))
+    return list(map(lambda row: int(row[0][11:13]), logs))
 
-def convert_bytes_to_kb(path):
+
+def convert_bytes_to_kb(logs):
     """
     ממירה גודל קבצים מבייטים לקילו בייטים
-    :param path:
+    :param logs:
     :return:
     """
-    return list(map(lambda row: round(int(row[5]) / 1024, 2), get_log(path)))
+    return list(map(lambda row: round(int(row[5]) / 1024, 2), logs))
 
-def filter_sensitive_ports_v2(path):
-    """
-    סינון שורות עם פורט רגיש
-    ע״י שימוש בפונקצית פילטר
-    :param path:
-    :return:
-    """
-    return list(filter(lambda row: row[4] in ('22', '23', '3389'), get_log(path)))
 
-def night_activity_by_filter(path):
+def night_activity_by_filter(logs):
     """
     סינון לוגים עם פעילות לילה
     באמצעות שימוש בפונקצית פילטר
-    :param path:
+    :param logs:
     :return:
     """
-    return list(filter(lambda row: 6 > int(row[0][11:13]) >= 0, get_log(path)))
+    return list(
+        filter(
+            lambda row: NIGHT_START_HOUR <= int(row[0][11:13]) < NIGHT_END_HOUR,
+            logs
+        )
+    )
+
+def check_row_suspicions(row, suspicion_checks):
+    """
+    הפונקציה מקבלת שורה אחת מהלוג ומילון בדיקות חשד,
+    ומחזירה רשימה של שמות החשדות שמתקיימים עבור השורה.
+
+    :param row: שורת לוג בודדת
+    :type row: list
+    :param suspicion_checks: מילון שבו המפתח הוא שם החשד
+    והערך הוא פונקציה שבודקת אם השורה עומדת בקריטריון
+    :type suspicion_checks: dict
+    :return: רשימת שמות החשדות שהשורה עומדת בהם
+    :rtype: list
+    """
+    return [item[0] for item in filter(lambda item: item[1](row), suspicion_checks.items())]
+
+
+def check_log(logs, suspicion_checks):
+    """
+    הפונקציה מקבלת את כל שורות הלוג ומילון בדיקות חשד,
+    ומחזירה רשימה של זוגות:
+    (שורת לוג, רשימת החשדות שלה)
+
+    רק שורות שיש להן לפחות חשד אחד יוחזרו.
+
+    :param logs: רשימת שורות הלוג
+    :type logs: list
+    :param suspicion_checks: מילון בדיקות חשד
+    :type suspicion_checks: dict
+    :return: רשימה של זוגות (row, suspicions)
+    :rtype: list
+    """
+    return list(
+        filter(
+            lambda item: item[1],
+            map(lambda row: (row, check_row_suspicions(row, suspicion_checks)), logs)
+        )
+    )
+
+
+
