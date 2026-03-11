@@ -1,27 +1,44 @@
 from reader import get_log
-from checks import filter_external_ips, filter_sensitive_ports, add_label_sizes
+from checks import (
+    filter_large_sizes,
+    filter_external_ips,
+    filter_sensitive_ports,
+    night_activity_by_filter
+)
+from config import (
+    EXTERNAL_IP_LABEL,
+    SENSITIVE_PORT_LABEL,
+    LARGE_PACKET_LABEL,
+    NIGHT_ACTIVITY_LABEL,
+    suspicion_checks
+)
 
 def get_ip_labels(path):
     """
     הפונקציה מקבלת את הנתונים ומחזירה מילון
-    {כתובת ip : רשמת סוגי החשדות}
+    {כתובת ip : רשימת סוגי החשדות}
     :param path:
     :return dict:
     """
-    external_ips = set(filter_external_ips(path))
-    sensitive_ports_ips = set([ip[1] for ip in filter_sensitive_ports(path)])
-    large_packet_ips = set([ip[1] for ip in add_label_sizes(path) if ip[-1] == "LARGE"])
-    night_activity_ips = set([ip[1] for ip in get_log(path) if 6 > int(ip[0][11:13]) >= 0])
+    logs = get_log(path)
+
+    external_ips = set(filter_external_ips(logs))
+    sensitive_ports_ips = {row[1] for row in filter_sensitive_ports(logs)}
+    large_packet_ips = {row[1] for row in filter_large_sizes(logs)}
+    night_activity_ips = {row[1] for row in night_activity_by_filter(logs)}
 
     criteria_labels = [
-        ("IP_EXTERNAL", external_ips),
-        ("PORT_SENSITIVE", sensitive_ports_ips),
-        ("PACKET_LARGE", large_packet_ips),
-        ("ACTIVITY_NIGHT", night_activity_ips)
+        (EXTERNAL_IP_LABEL, external_ips),
+        (SENSITIVE_PORT_LABEL, sensitive_ports_ips),
+        (LARGE_PACKET_LABEL, large_packet_ips),
+        (NIGHT_ACTIVITY_LABEL, night_activity_ips)
     ]
 
-    return {ip[1]:[label for label, group in criteria_labels if ip[1] in group]
-            for ip in get_log(path)}
+    return {
+        row[1]: [label for label, group in criteria_labels if row[1] in group]
+        for row in logs
+    }
+
 
 def filter_suspicious_ips(path):
     """
@@ -31,4 +48,4 @@ def filter_suspicious_ips(path):
     :return dict:
     """
     ip_labels = get_ip_labels(path)
-    return {ip:labels for ip, labels in ip_labels.items() if len(labels) >= 2}
+    return {ip: labels for ip, labels in ip_labels.items() if len(labels) >= 2}
