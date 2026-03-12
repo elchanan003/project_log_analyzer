@@ -1,16 +1,16 @@
-from reader import read_logs_with_yield
-from config import LOG_PATH, suspicion_checks
-from checks import filter_suspicious_rows, add_suspicion_details, count_items
+from analyzer import analyze_log
+from reporter import generate_report, save_report
 
 
 def main():
-    lines = read_logs_with_yield(LOG_PATH)
-    suspicious = filter_suspicious_rows(lines, suspicion_checks)
-    detailed = add_suspicion_details(suspicious, suspicion_checks)
 
-    count = count_items(detailed)
+    suspicious = analyze_log("network_traffic.log")
 
-    print(f"Total suspicious: {count}")
+    report = generate_report(suspicious)
+
+    print(report)
+
+    save_report(report, "security_report.txt")
 
 
 if __name__ == "__main__":
