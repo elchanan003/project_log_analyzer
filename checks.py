@@ -145,5 +145,68 @@ def check_log(logs, suspicion_checks):
         )
     )
 
+def filter_suspicious_rows(logs, suspicion_checks):
+    """
+    מקבלת generator של שורות לוג ומילון בדיקות חשד,
+    ומחזירה generator של שורות חשודות בלבד.
 
+    :param logs: generator של שורות לוג
+    :type logs: generator
+    :param suspicion_checks: מילון בדיקות חשד
+    :type suspicion_checks: dict
+    :yield: שורת לוג חשודה
+    :rtype: list
+    """
+    for row in logs:
+        if check_row_suspicions(row, suspicion_checks):
+            yield row
+
+
+def add_suspicion_details(logs, suspicion_checks):
+    """
+    מקבלת generator של שורות לוג ומוסיפה לכל שורה
+    את רשימת החשדות שנמצאו עבורה.
+
+    רק שורות שיש להן לפחות חשד אחד יוחזרו.
+
+    :param logs: generator של שורות לוג
+    :type logs: generator
+    :param suspicion_checks: מילון בדיקות חשד
+    :type suspicion_checks: dict
+    :yield: זוג (row, labels)
+    :rtype: tuple
+    """
+    for row in logs:
+        labels = check_row_suspicions(row, suspicion_checks)
+        if labels:
+            yield row, labels
+
+
+def count_suspicious_rows(logs, suspicion_checks):
+    """
+    סופרת כמה שורות חשודות יש בלוג.
+
+    הפונקציה משתמשת בפונקציית ה-generator שמחזירה
+    שורות חשודות עם פירוט החשדות.
+
+    :param logs: generator של שורות לוג
+    :type logs: generator
+    :param suspicion_checks: מילון בדיקות חשד
+    :type suspicion_checks: dict
+    :return: מספר השורות החשודות
+    :rtype: int
+    """
+    return sum(1 for _ in add_suspicion_details(logs, suspicion_checks))
+
+
+def count_items(generator):
+    """
+    פונקציה כללית לספירת איברים ב-generator.
+
+    :param generator: generator כלשהו
+    :type generator: generator
+    :return: מספר האיברים שה-generator מחזיר
+    :rtype: int
+    """
+    return sum(1 for _ in generator)
 
