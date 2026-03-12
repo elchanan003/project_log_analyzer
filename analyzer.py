@@ -1,9 +1,10 @@
-from reader import get_log
+from reader import get_log, read_logs_with_yield
 from checks import (
     filter_large_sizes,
     filter_external_ips,
     filter_sensitive_ports,
-    night_activity_by_filter
+    night_activity_by_filter,
+    add_suspicion_details
 )
 from config import (
     EXTERNAL_IP_LABEL,
@@ -12,6 +13,70 @@ from config import (
     NIGHT_ACTIVITY_LABEL,
     suspicion_checks
 )
+
+
+TOTAL_LINES = 0
+SUSPICIOUS_LINES = 0
+SUSPICION_COUNTER = {
+    EXTERNAL_IP_LABEL: 0,
+    SENSITIVE_PORT_LABEL: 0,
+    LARGE_PACKET_LABEL: 0,
+    NIGHT_ACTIVITY_LABEL: 0
+}
+
+def update_statistics(labels):
+    """
+    מעדכנת את הסטטיסטיקות הגלובליות עבור שורה אחת.
+
+    :param labels: רשימת החשדות שנמצאו בשורה
+    :type labels: list
+    """
+    global TOTAL_LINES
+    global SUSPICIOUS_LINES
+    global SUSPICION_COUNTER
+
+    TOTAL_LINES += 1
+
+    if labels:
+        SUSPICIOUS_LINES += 1
+
+        for label in labels:
+            SUSPICION_COUNTER[label] += 1
+
+
+def analyze_log(path):
+    """
+    מנתחת קובץ לוג ומחזירה מילון של כתובות IP חשודות.
+
+    הפונקציה קוראת את הלוג באמצעות generator, מזהה חשדות עבור כל שורה,
+    מעדכנת סטטיסטיקות גלובליות, ובונה מילון שבו כל IP משויך לרשימת
+    החשדות שהתגלו עבורו.
+
+    :param path: נתיב לקובץ הלוג
+    :type path: str | Path
+    :return: מילון שבו המפתח הוא כתובת IP והערך הוא רשימת החשדות שלה
+    :rtype: dict
+    """
+
+    suspicious_dict = {}
+
+    logs = read_logs_with_yield(path)
+
+    for row, labels in add_suspicion_details(logs, suspicion_checks):
+        update_statistics(labels)
+
+        ip = row[1]
+
+        if ip not in suspicious_dict:
+            suspicious_dict[ip] = set(labels)
+        else:
+            suspicious_dict[ip].update(labels)
+
+    for ip in suspicious_dict:
+        suspicious_dict[ip] = list(suspicious_dict[ip])
+
+    return suspicious_dict
+
 
 def get_ip_labels(path):
     """
